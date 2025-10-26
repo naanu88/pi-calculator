@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming Pi Digits</title>
+    <style>
+        /* Basic styling for readability */
+        body {
+            font-family: monospace;
+            font-size: 1.5rem;
+            line-height: 1.8;
+            padding: 20px;
+        }
+        #pi-digits {
+            word-wrap: break-word; /* Allows the long string of digits to wrap */
+        }
+        #pi-digits strong {
+            font-size: 2rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Calculating the Digits of Pi Continually...</h2>
+    
+    <div id="pi-digits">
+        <strong>3.</strong>
+    </div>
+
+    <script>
+        // This is the same spigot algorithm, translated to JavaScript.
+        // We use a "generator function" (async function*) just like in Python.
+        // We use BigInt (e.g., 1n, 0n, 10n) because the numbers get huge!
+        async function* piDigitsGenerator() {
+            let q = 1n, r = 0n, t = 1n, k = 1n, n = 3n, l = 3n;
+
+            while (true) {
+                if (4n * q + r - t < n * t) {
+                    // Yield the next digit
+                    yield n;
+
+                    // Update the state for the next iteration
+                    let nr = 10n * (r - n * t);
+                    n = ((10n * (3n * q + r)) / t) - 10n * n;
+                    q = 10n * q;
+                    r = nr;
+                } else {
+                    // Continue the calculation process
+                    let nr = (2n * q + r) * l;
+                    let nn = (q * (7n * k) + 2n + (r * l)) / (t * l);
+                    q = q * k;
+                    t = t * l;
+                    l = l + 2n;
+                    k = k + 1n;
+                    n = nn;
+                    r = nr;
+                }
+            }
+        }
+
+        // Helper function to create a delay (like time.sleep in Python)
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Main function to run the code
+        async function displayPi() {
+            // Get the HTML element we want to add digits to
+            const piElement = document.getElementById("pi-digits");
+            
+            const piGen = piDigitsGenerator();
+
+            // Skip the first digit ('3') since we already printed it
+            await piGen.next(); 
+
+            // Loop forever, getting the next digit from the generator
+            for await (const digit of piGen) {
+                // Append the new digit to the HTML element
+                piElement.textContent += digit;
+                
+                // Wait for 100ms so we can watch the digits appear
+                await sleep(100);
+            }
+        }
+
+        // Run the main function when the page loads
+        displayPi();
+
+    </script>
+
+</body>
+</html>
